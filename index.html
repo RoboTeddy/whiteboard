@@ -144,7 +144,7 @@ $(document).ready(function() {
   });
 
   // prevent text cursor from showing up as you draw
-  $topCanvas.get(0).onselectstart = function () { return false; };
+  topCanvas.onselectstart = function () { return false; };
 });
 
 </script>
@@ -171,7 +171,7 @@ div.cursor {
   position: absolute;
   border:1px solid red;
   border-width: 1px 0 0 1px;
-  z-index:3;
+  z-index: 3;
 }
 
 input[type=radio] {
@@ -180,10 +180,8 @@ input[type=radio] {
 </style>
 
 <body>
-    <canvas id="bottom" width="980" height="980">
-  </canvas>
-  <canvas id="top" width="980" height="980">
-  </canvas>
+  <canvas id="bottom" width="980" height="980"></canvas>
+  <canvas id="top" width="980" height="980"></canvas>
 
   <div>
     <button id="clear" hotkey="67">Clear (hotkey: c)</button>
