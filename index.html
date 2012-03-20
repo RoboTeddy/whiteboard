@@ -167,6 +167,17 @@ body {
   z-index: 2;
 }
 
+#toolbar {
+  position: absolute;
+  top: 0px;
+  width: 980px;
+  z-index: 4;
+  margin: 1px;
+  padding: 3px;
+  background-color: #e2e2e2;
+  box-sizing: border-box;
+}
+
 div.cursor {
   position: absolute;
   border:1px solid red;
@@ -183,7 +194,7 @@ input[type=radio] {
   <canvas id="bottom" width="980" height="980"></canvas>
   <canvas id="top" width="980" height="980"></canvas>
 
-  <div>
+  <div id="toolbar">
     <button id="clear" hotkey="67">Clear (hotkey: c)</button>
     <button id="undo" hotkey="90">Undo (hotkey: z)</button>
 
