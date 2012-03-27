@@ -97,16 +97,12 @@ $(document).ready(function() {
       thickness: $("input[name=brush]:checked").attr('thickness')
     };
 
-    var addLineSegment = function(x, y) {
-      newLayer.points.push({x: x, y: y});
-      showNewLayer();
-    };
-
     var now = function() { return new Date().getTime() };
     var last = 0;
     $body.on('mousemove.brush', function(e) {
       if(last < now() - 20) {
-        addLineSegment(e.pageX, e.pageY);
+        newLayer.points.push({x: x, y: y});
+        showNewLayer();
         last = now();
       }
     });
