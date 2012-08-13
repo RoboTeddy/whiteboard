@@ -78,8 +78,7 @@ $(document).ready(function() {
           .appendTo('body');
     }
 
-    // add 1 so the cursor div doesn't capture mouse events
-    $cursor.css('left', user.cursorPoint.x).css('top', user.cursorPoint.y+1);
+    $cursor.css('left', user.cursorPoint.x).css('top', user.cursorPoint.y);
   });
 
   usersRef.on('child_removed', function(snapshot) {
@@ -179,6 +178,7 @@ div.cursor {
   border:1px solid red;
   border-width: 1px 0 0 1px;
   z-index: 3;
+  pointer-events: none;
 }
 
 input[type=radio] {
