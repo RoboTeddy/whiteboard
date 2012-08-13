@@ -115,9 +115,9 @@ $(document).ready(function() {
 
   $body.on(
     'mousemove',
-    function(e) {
+    _.throttle(function(e) {
       userRef.child('cursorPoint').set({x: e.pageX, y: e.pageY});
-    }
+    }, 30)
   );
 
   $("#clear").on('click', function() {
