@@ -101,7 +101,7 @@ $(document).ready(function() {
     var last = 0;
     $body.on('mousemove.brush', function(e) {
       if(last < now() - 20) {
-        newLayer.points.push({x: x, y: y});
+        newLayer.points.push({x: e.pageX, y: e.pageY});
         showNewLayer();
         last = now();
       }
