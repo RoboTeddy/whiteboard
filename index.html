@@ -1,188 +1,49 @@
-<script type="text/javascript" src="http://static.firebase.com/v0/firebase.js"></script>
-<script type="text/javascript" src="http://documentcloud.github.com/underscore/underscore-min.js"></script>
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-<script>
-
-$(document).ready(function() {
-
-  var applicationId = 'dGGN78LVtNCgoQ';
-  var boardId = location.search.substring(1) || prompt("Enter a unique id for your board");
-  var username = prompt("Enter a username (only letters and numbers please)");
-
-  var width = 980;
-  var height = 980;
-
-  var rootRef = new Firebase('http://gamma.firebase.com/' + applicationId);
-  var boardRef = rootRef.child(boardId);
-  var layersRef = boardRef.child('layers');
-  var usersRef = boardRef.child('users');
-  var userRef = usersRef.child(username);
-
-  var $body = $("body");
-
-  var $bottomCanvas = $('#bottom');
-  var $topCanvas = $('#top');
-
-  var bottomCanvas = $bottomCanvas.get(0);
-  var topCanvas = $topCanvas.get(0);
-
-  var bottomCtx = bottomCanvas.getContext('2d');
-  var topCtx = topCanvas.getContext('2d');
-
-  var newLayer;
-
-  // View:
-
-  var clear = function(ctx) {
-    ctx.clearRect(0, 0, width, height);
-  };
-
-  var drawLayer = function(ctx, layer) {
-    ctx.beginPath();
-    ctx.lineWidth = layer.thickness;
-    ctx.strokeStyle = layer.color;
-    ctx.moveTo(layer.points[0].x, layer.points[0].y);
-    _.each(_.rest(layer.points, 1), function(point) {
-      ctx.lineTo(point.x, point.y);
-    });
-    ctx.stroke();
-  };
-
-  var showNewLayer = function() {
-    clear(topCtx);
-    drawLayer(topCtx, newLayer);
-  };
-
-  var drawChild = function(snapshot) {
-    drawLayer(bottomCtx, snapshot.val());
-  };
-
-  var redraw = function() {
-    clear(bottomCtx);
-    layersRef.once('value', function(snapshot) {
-      snapshot.forEach(drawChild);
-    });
-  };
-
-  layersRef.on('child_added', drawChild);
-  layersRef.on('child_removed', redraw);
-
-  usersRef.on('child_changed', function(snapshot) {
-    var name = snapshot.name();
-    var user = snapshot.val();
-
-    id = "cursor_"+name;
-    var $cursor = $("#"+id);
-    if(!$cursor.length) {
-      $cursor = $('<div>').attr('id', id).addClass('cursor').text(name)
-          .appendTo('body');
+<!DOCTYPE html>
+<head>
+  <title>Whiteboard</title>
+  <style type="text/css">
+    body {
+      margin: 0px;
+      padding: 0px;
+      font-family: arial;
+      font-size :11px;
     }
 
-    $cursor.css('left', user.cursorPoint.x).css('top', user.cursorPoint.y);
-  });
+    #top, #bottom {
+      border:1px solid gray;
+    }
 
-  usersRef.on('child_removed', function(snapshot) {
-    $("#cursor_"+snapshot.name()).remove();
-  });
+    #top {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      z-index: 2;
+    }
 
-  // User input:
+    #toolbar {
+      position: absolute;
+      top: 0px;
+      width: 980px;
+      z-index: 4;
+      margin: 1px;
+      padding: 3px;
+      background-color: #e2e2e2;
+      box-sizing: border-box;
+    }
 
-  userRef.removeOnDisconnect();
+    div.cursor {
+      position: absolute;
+      border:1px solid red;
+      border-width: 1px 0 0 1px;
+      z-index: 3;
+      pointer-events: none;
+    }
 
-  $topCanvas.on('mousedown', function(e) {
-    newLayer = {
-      points: [{x: e.pageX, y: e.pageY}],
-      color: $("input[name=brush]:checked").attr('color'),
-      thickness: $("input[name=brush]:checked").attr('thickness')
-    };
-
-    var now = function() { return new Date().getTime() };
-    var last = 0;
-    $body.on('mousemove.brush', function(e) {
-      if(last < now() - 20) {
-        newLayer.points.push({x: e.pageX, y: e.pageY});
-        showNewLayer();
-        last = now();
-      }
-    });
-
-    $body.one('mouseup', function(e) {
-      $body.off('mousemove.brush');
-      layersRef.push(newLayer);
-      clear(topCtx);
-    });
-  });
-
-  $body.on(
-    'mousemove',
-    _.throttle(function(e) {
-      userRef.child('cursorPoint').set({x: e.pageX, y: e.pageY});
-    }, 30)
-  );
-
-  $("#clear").on('click', function() {
-    layersRef.remove();
-  });
-
-  $("#undo").on('click', function() {
-    var query = layersRef.limit(1);
-    query.once('child_added', function(snapshot) {
-      layersRef.child(snapshot.name()).remove();
-    });
-  });
-
-  $(document).keydown(function(e) {
-    console.log(e.which)
-    $("*[hotkey="+e.which+"]").click();
-  });
-
-  // prevent text cursor from showing up as you draw
-  topCanvas.onselectstart = function () { return false; };
-});
-
-</script>
-<style type="text/css">
-body {
-  margin: 0px;
-  padding: 0px;
-  font-family: arial;
-  font-size :11px;
-}
-
-#top, #bottom {
-  border:1px solid gray;
-}
-
-#top {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  z-index: 2;
-}
-
-#toolbar {
-  position: absolute;
-  top: 0px;
-  width: 980px;
-  z-index: 4;
-  margin: 1px;
-  padding: 3px;
-  background-color: #e2e2e2;
-  box-sizing: border-box;
-}
-
-div.cursor {
-  position: absolute;
-  border:1px solid red;
-  border-width: 1px 0 0 1px;
-  z-index: 3;
-  pointer-events: none;
-}
-
-input[type=radio] {
-  margin-left: 30px;
-}
-</style>
+    input[type=radio] {
+      margin-left: 30px;
+    }
+  </style>
+</head>
 
 <body>
   <canvas id="bottom" width="980" height="980"></canvas>
@@ -199,4 +60,148 @@ input[type=radio] {
     <input type="radio" name="brush" color="#0000FF" thickness="1" hotkey="76" /> Blue (hotkey: l)
     <input type="radio" name="brush" color="#FFFFFF" thickness="20" hotkey="69" /> Eraser (hotkey: e)
   </div>
+
+  <script type="text/javascript" src="http://static.firebase.com/v0/firebase.js"></script>
+  <script type="text/javascript" src="http://documentcloud.github.com/underscore/underscore-min.js"></script>
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script>
+
+  $(document).ready(function() {
+
+    var applicationId = 'dGGN78LVtNCgoQ';
+    var boardId = location.search.substring(1) || prompt("Enter a unique id for your board");
+    var username = prompt("Enter a username (only letters and numbers please)");
+
+    var width = 980;
+    var height = 980;
+
+    var rootRef = new Firebase('http://gamma.firebase.com/' + applicationId);
+    var boardRef = rootRef.child(boardId);
+    var layersRef = boardRef.child('layers');
+    var usersRef = boardRef.child('users');
+    var userRef = usersRef.child(username);
+
+    var $body = $("body");
+
+    var $bottomCanvas = $('#bottom');
+    var $topCanvas = $('#top');
+
+    var bottomCanvas = $bottomCanvas.get(0);
+    var topCanvas = $topCanvas.get(0);
+
+    var bottomCtx = bottomCanvas.getContext('2d');
+    var topCtx = topCanvas.getContext('2d');
+
+    var newLayer;
+
+    // View:
+
+    var clear = function(ctx) {
+      ctx.clearRect(0, 0, width, height);
+    };
+
+    var drawLayer = function(ctx, layer) {
+      ctx.beginPath();
+      ctx.lineWidth = layer.thickness;
+      ctx.strokeStyle = layer.color;
+      ctx.moveTo(layer.points[0].x, layer.points[0].y);
+      _.each(_.rest(layer.points, 1), function(point) {
+        ctx.lineTo(point.x, point.y);
+      });
+      ctx.stroke();
+    };
+
+    var showNewLayer = function() {
+      clear(topCtx);
+      drawLayer(topCtx, newLayer);
+    };
+
+    var drawChild = function(snapshot) {
+      drawLayer(bottomCtx, snapshot.val());
+    };
+
+    var redraw = function() {
+      clear(bottomCtx);
+      layersRef.once('value', function(snapshot) {
+        snapshot.forEach(drawChild);
+      });
+    };
+
+    layersRef.on('child_added', drawChild);
+    layersRef.on('child_removed', redraw);
+
+    usersRef.on('child_changed', function(snapshot) {
+      var name = snapshot.name();
+      var user = snapshot.val();
+
+      id = "cursor_"+name;
+      var $cursor = $("#"+id);
+      if(!$cursor.length) {
+        $cursor = $('<div>').attr('id', id).addClass('cursor').text(name)
+            .appendTo('body');
+      }
+
+      $cursor.css('left', user.cursorPoint.x).css('top', user.cursorPoint.y);
+    });
+
+    usersRef.on('child_removed', function(snapshot) {
+      $("#cursor_"+snapshot.name()).remove();
+    });
+
+    // User input:
+
+    userRef.removeOnDisconnect();
+
+    $topCanvas.on('mousedown', function(e) {
+      newLayer = {
+        points: [{x: e.pageX, y: e.pageY}],
+        color: $("input[name=brush]:checked").attr('color'),
+        thickness: $("input[name=brush]:checked").attr('thickness')
+      };
+
+      var now = function() { return new Date().getTime() };
+      var last = 0;
+      $body.on('mousemove.brush', function(e) {
+        if(last < now() - 20) {
+          newLayer.points.push({x: e.pageX, y: e.pageY});
+          showNewLayer();
+          last = now();
+        }
+      });
+
+      $body.one('mouseup', function(e) {
+        $body.off('mousemove.brush');
+        layersRef.push(newLayer);
+        clear(topCtx);
+      });
+    });
+
+    $body.on(
+      'mousemove',
+      _.throttle(function(e) {
+        userRef.child('cursorPoint').set({x: e.pageX, y: e.pageY});
+      }, 30)
+    );
+
+    $("#clear").on('click', function() {
+      layersRef.remove();
+    });
+
+    $("#undo").on('click', function() {
+      var query = layersRef.limit(1);
+      query.once('child_added', function(snapshot) {
+        layersRef.child(snapshot.name()).remove();
+      });
+    });
+
+    $(document).keydown(function(e) {
+      console.log(e.which)
+      $("*[hotkey="+e.which+"]").click();
+    });
+
+    // prevent text cursor from showing up as you draw
+    topCanvas.onselectstart = function () { return false; };
+  });
+
+  </script>
 </body>
