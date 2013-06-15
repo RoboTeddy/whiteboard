@@ -82,7 +82,7 @@
     var width = 980;
     var height = 980;
 
-    var rootRef = new Firebase('http://gamma.firebase.com/' + applicationId);
+    var rootRef = new Firebase('https://rt-whiteboard.firebaseio.com/' + applicationId);
     var boardRef = rootRef.child(boardId);
     var layersRef = boardRef.child('layers');
     var usersRef = boardRef.child('users');
